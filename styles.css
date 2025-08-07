@@ -1,0 +1,12 @@
+.zillow-btn {
+    margin: 5px;
+    padding: 4px;
+    background: #EEEEEE;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.zillow-btn:hover {
+    scale: 1.1;
+}
