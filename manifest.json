@@ -9,6 +9,16 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "css": ["styles.css"]
+    },
+    {
+      "matches": ["https://*.realtor.com/*"],
+      "js": ["realtor-prefill.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://*.har.com/*"],
+      "js": ["har-prefill.js"],
+      "run_at": "document_idle"
     }
   ],
   "icons": {
