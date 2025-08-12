@@ -5,17 +5,16 @@
 
     const prefill = decodeURIComponent(prefillRaw).trim();
 
-    const waitFor = (fn, timeoutMs = 7000, intervalMs = 80) =>
-        new Promise(resolve => {
-            const start = Date.now();
-            const timer = setInterval(() => {
-                const v = fn();
-                if (v || Date.now() - start > timeoutMs) {
-                    clearInterval(timer);
-                    resolve(v || null);
-                }
-            }, intervalMs);
-        });
+    const waitFor = (fn, timeoutMs = 7000, intervalMs = 80) => new Promise(resolve => {
+        const start = Date.now();
+        const timer = setInterval(() => {
+            const v = fn();
+            if (v || Date.now() - start > timeoutMs) {
+                clearInterval(timer);
+                resolve(v || null);
+            }
+        }, intervalMs);
+    });
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -23,13 +22,13 @@
         const proto = Object.getPrototypeOf(input);
         const desc = Object.getOwnPropertyDescriptor(proto, "value");
         desc?.set?.call(input, value);
-        input.dispatchEvent(new Event("input",  { bubbles: true }));
-        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.dispatchEvent(new Event("input", {bubbles: true}));
+        input.dispatchEvent(new Event("change", {bubbles: true}));
     };
 
     const pressKey = (el, key) => {
-        el.dispatchEvent(new KeyboardEvent("keydown", { key, code: key, bubbles: true }));
-        el.dispatchEvent(new KeyboardEvent("keyup",   { key, code: key, bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent("keydown", {key, code: key, bubbles: true}));
+        el.dispatchEvent(new KeyboardEvent("keyup", {key, code: key, bubbles: true}));
     };
 
     const pressEnter = el => pressKey(el, "Enter");
@@ -40,7 +39,7 @@
         const m = s.match(/\b\d{5}(?:-\d{4})?\b/);
         return m ? m[0] : null;
     };
-    const SIG_SKIP = new Set(["st","rd","ave","blvd","ln","ct","dr","hwy","pkwy","trl","cir","cv","way","nw","ne","sw","se","n","s","e","w","tx","us","usa"]);
+    const SIG_SKIP = new Set(["st", "rd", "ave", "blvd", "ln", "ct", "dr", "hwy", "pkwy", "trl", "cir", "cv", "way", "nw", "ne", "sw", "se", "n", "s", "e", "w", "tx", "us", "usa"]);
     const sigTokens = s => norm(s).split(" ").filter(t => t.length >= 3 && !SIG_SKIP.has(t));
 
     const streetNumber = digits(prefill)[0] || null;
@@ -59,13 +58,7 @@
     };
 
     (async () => {
-        const input = await waitFor(() =>
-            document.querySelector(
-                'input#search, input#keyword, input[name="q"], input[aria-label*="Search"], ' +
-                'input[placeholder*="Address"], input[placeholder*="City"], ' +
-                'input[type="search"], input[type="text"].search, input[type="text"].search-input'
-            )
-        );
+        const input = await waitFor(() => document.querySelector('input#search, input#keyword, input[name="q"], input[aria-label*="Search"], ' + 'input[placeholder*="Address"], input[placeholder*="City"], ' + 'input[type="search"], input[type="text"].search, input[type="text"].search-input'));
         if (!input) return;
 
         input.focus();
@@ -75,13 +68,12 @@
 
         pressKey(input, "ArrowDown");
 
-        const getSuggestions = () =>
-            Array.from(document.querySelectorAll(
-                '#mainsearch_listbox .tt-suggestion.tt-selectable, ' + //utter woke HAR nonsense
-                '[role="listbox"] .tt-suggestion.tt-selectable, ' +
-                '[role="listbox"] [role="option"]'
-            )).map(el => ({ el, text: norm(el.textContent || "") }))
-                .filter(s => s.text);
+        const getSuggestions = () => Array.from(document.querySelectorAll('#mainsearch_listbox .tt-suggestion.tt-selectable, ' + //utter woke HAR nonsense
+            '[role="listbox"] .tt-suggestion.tt-selectable, ' + '[role="listbox"] [role="option"]')).map(el => ({
+            el,
+            text: norm(el.textContent || "")
+        }))
+            .filter(s => s.text);
 
         let chosen = null;
         const start = Date.now();
@@ -93,7 +85,7 @@
 
         if (chosen) {
             await delay(120);
-            chosen.el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            chosen.el.dispatchEvent(new MouseEvent("mousedown", {bubbles: true}));
             chosen.el.click();
         } else {
             const btn = document.querySelector('button[aria-label="Search"], button[type="submit"], .search-button, .btn-search');

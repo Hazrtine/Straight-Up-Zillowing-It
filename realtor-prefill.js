@@ -5,17 +5,16 @@
 
     const prefill = decodeURIComponent(prefillRaw).trim();
 
-    const waitFor = (fn, timeoutMs = 6000, intervalMs = 80) =>
-        new Promise(resolve => {
-            const start = Date.now();
-            const timer = setInterval(() => {
-                const v = fn();
-                if (v || Date.now() - start > timeoutMs) {
-                    clearInterval(timer);
-                    resolve(v || null);
-                }
-            }, intervalMs);
-        });
+    const waitFor = (fn, timeoutMs = 6000, intervalMs = 80) => new Promise(resolve => {
+        const start = Date.now();
+        const timer = setInterval(() => {
+            const v = fn();
+            if (v || Date.now() - start > timeoutMs) {
+                clearInterval(timer);
+                resolve(v || null);
+            }
+        }, intervalMs);
+    });
 
     const delay = ms => new Promise(r => setTimeout(r, ms));
 
@@ -23,13 +22,17 @@
         const proto = Object.getPrototypeOf(input);
         const desc = Object.getOwnPropertyDescriptor(proto, "value");
         desc?.set?.call(input, value);
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.dispatchEvent(new Event("input", {bubbles: true}));
+        input.dispatchEvent(new Event("change", {bubbles: true}));
     };
 
     const pressEnter = el => {
-        el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
-        el.dispatchEvent(new KeyboardEvent("keyup",   { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true
+        }));
+        el.dispatchEvent(new KeyboardEvent("keyup", {
+            key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true
+        }));
     };
 
     const norm = s => s.toLowerCase()
@@ -43,7 +46,7 @@
         return m ? m[0] : null;
     };
 
-    const SIG_SKIP = new Set(["st","rd","ave","blvd","ln","ct","dr","hwy","pkwy","trl","cir","cv","way","nw","ne","sw","se","n","s","e","w","tx","us","usa"]);
+    const SIG_SKIP = new Set(["st", "rd", "ave", "blvd", "ln", "ct", "dr", "hwy", "pkwy", "trl", "cir", "cv", "way", "nw", "ne", "sw", "se", "n", "s", "e", "w", "tx", "us", "usa"]);
     const sigTokens = s => norm(s).split(" ")
         .filter(t => t.length >= 3 && !SIG_SKIP.has(t));
 
@@ -52,18 +55,11 @@
     const zip = findZip(prefill);
     const addressSig = sigTokens(prefill);
 
-    const suggestionSelector = [
-        '#search-bar-listbox [role="option"]',
-        '[data-testid="typeahead-option"]',
-        '[data-testid="search-suggestion"]',
-        '[role="listbox"] [role="option"]',
-        'ul[role="listbox"] li'
-    ].join(", ");
+    const suggestionSelector = ['#search-bar-listbox [role="option"]', '[data-testid="typeahead-option"]', '[data-testid="search-suggestion"]', '[role="listbox"] [role="option"]', 'ul[role="listbox"] li'].join(", ");
 
-    const getSuggestions = () =>
-        Array.from(document.querySelectorAll(suggestionSelector))
-            .map(el => ({ el, text: norm(el.textContent || "") }))
-            .filter(s => s.text); // keep non-empty
+    const getSuggestions = () => Array.from(document.querySelectorAll(suggestionSelector))
+        .map(el => ({el, text: norm(el.textContent || "")}))
+        .filter(s => s.text); // keep non-empty
 
     const matchesAddress = (sText) => {
         if (streetNumber && !sText.includes(streetNumber)) return false;
@@ -97,7 +93,7 @@
         }
 
         if (chosen) {
-            chosen.el.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            chosen.el.dispatchEvent(new MouseEvent("mousedown", {bubbles: true}));
             chosen.el.click();
         } else {
             pressEnter(input);
