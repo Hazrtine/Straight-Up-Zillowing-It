@@ -1,35 +1,26 @@
-const usStates = [
-    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY",
-    "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH",
-    "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"
-];
+const usStates = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VT", "WA", "WI", "WV", "WY"];
 
 function normalizeAddress(input) {
     try {
         if (!input) return "";
         let s = String(input).trim();
 
-        // 1) Split run-on boundaries
         s = s
-            .replace(/(\d)([A-Za-z])/g, "$1 $2")    // 710K -> 710 K
-            .replace(/([A-Za-z])(\d)/g, "$1 $2")    // Ct77079 -> Ct 77079
-            .replace(/([a-z])([A-Z])/g, "$1 $2")    // KahldenCt -> Kahlden Ct
+            .replace(/(\d)([A-Za-z])/g, "$1 $2")
+            .replace(/([A-Za-z])(\d)/g, "$1 $2")
+            .replace(/([a-z])([A-Z])/g, "$1 $2")
             .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
             .replace(/\s+/g, " ")
             .trim();
 
-        // 2) Strip unit/suite tags if present
         s = s.replace(/\b(?:apt|apartment|unit|ste|suite|#)\s*[\w\-]+/gi, "").replace(/\s{2,}/g, " ").trim();
 
-        // 3) Normalize any existing commas
         s = s.replace(/，/g, ",").replace(/\s*,\s*/g, ", ").replace(/\s{2,}/g, " ").trim();
 
-        // If commas already present, just ensure state is uppercased before ZIP and return.
         if (s.includes(",")) {
             return s.replace(/,\s*([a-z]{2})\s+(\d{5}(?:-\d{4})?)/i, (_, st, zip) => `, ${st.toUpperCase()} ${zip}`).trim();
         }
 
-        // 4) No commas: try to build "<street>, <city>, <ST> <ZIP>"
         const tokens = s.split(" ");
         if (tokens.length < 4) return s;
 
@@ -39,44 +30,39 @@ function normalizeAddress(input) {
         const zip = tokens[tokens.length - 1];
         const state = tokens[tokens.length - 2];
         if (!zipRe.test(zip) || !stateRe.test(state)) {
-            return s; // can't confidently structure
+            return s;
         }
 
-        const rest = tokens.slice(0, -2); // street + city part
-        if (!/^\d/.test(rest[0])) return s; // expect house number first
+        const rest = tokens.slice(0, -2);
+        if (!/^\d/.test(rest[0])) return s;
 
-        // Street suffixes to detect street end
-        const SUF = new Set([
-            "st","street","rd","road","dr","drive","ln","lane","ct","court","cir","circle",
-            "ave","avenue","blvd","boulevard","pkwy","parkway","trl","trail","way","cv","cove",
-            "hwy","highway","ter","terrace","pl","place","sq","square","loop","bend"
-        ]);
-        const DIR = new Set(["N","S","E","W","NE","NW","SE","SW"]);
+        const SUF = new Set(["st", "street", "rd", "road", "dr", "drive", "ln", "lane", "ct", "court", "cir", "circle", "ave", "avenue", "blvd", "boulevard", "pkwy", "parkway", "trl", "trail", "way", "cv", "cove", "hwy", "highway", "ter", "terrace", "pl", "place", "sq", "square", "loop", "bend"]);
+        const DIR = new Set(["N", "S", "E", "W", "NE", "NW", "SE", "SW"]);
 
-        // Find the index of the street suffix
         let sufIdx = -1;
         for (let i = 1; i < rest.length; i++) {
             const tokNorm = rest[i].toLowerCase().replace(/\./g, "");
-            if (SUF.has(tokNorm)) { sufIdx = i; break; }
+            if (SUF.has(tokNorm)) {
+                sufIdx = i;
+                break;
+            }
         }
 
         let street, city;
 
         if (sufIdx !== -1) {
-            // Include trailing number or direction after suffix (e.g., "Hwy 6", "St W")
             let end = sufIdx;
             while (end + 1 < rest.length && (/^\d+$/.test(rest[end + 1]) || DIR.has(rest[end + 1].toUpperCase()))) {
                 end++;
             }
             street = rest.slice(0, end + 1).join(" ");
-            city   = rest.slice(end + 1).join(" ");
+            city = rest.slice(end + 1).join(" ");
         } else {
-            // Fallback: assume street is "number + two tokens", rest = city
             if (rest.length >= 4) {
                 street = rest.slice(0, 3).join(" ");
-                city   = rest.slice(3).join(" ");
+                city = rest.slice(3).join(" ");
             } else {
-                return s; // too ambiguous
+                return s;
             }
         }
 
